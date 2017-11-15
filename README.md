@@ -1,3 +1,3 @@
-# Master_Data_Science
+# Master Data Science
 Data Science Master repo
-New line
+
