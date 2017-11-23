@@ -1,0 +1,154 @@
+Claves primarias de cada tabla?
+Que asignaturas hay? 
+
+select * from subjects;
+
+Que campos (ramas) hay en el master? 
+
+select field from subjects group by field;
+
+En que asignaturas da clase Grace Hopper?
+
+select s.name 
+from people as p 
+inner join teaches as t on p.id =t.teacher_id 
+inner join subjects as s on t.subject_id =s.id  
+where p.name = 'Grace Hopper' ;
+
+Quienes son los profesores de la asignatura "Compilers"?
+
+select distinct(p.name) from subjects as s
+inner join teaches as t on t.subject_id = s.id
+inner join people as p on p.id = t.teacher_id
+where s.name = 'Compilers';
+
+Quienes son los profesores de la academia?
+
+select name 
+from people 
+where id in (select distinct(teacher_id) from teaches);
+
+Cuantos son los profesores de la academia?
+
+select count(1) 
+from people 
+where id in (select distinct(teacher_id) from teaches);
+
+En cuantas asignaturas participa cada profesor?
+
+select count(1), nationality f
+rom people as p 
+where p.id in 	(
+		select distinct(teacher_id) from teaches
+		) 
+group by nationality order by count(1) desc limit 1;
+
+Cual es la asignatura con mas matriculados? 
+
+#POR ANYO
+select s.name 
+from subjects as s, 
+(select count(1), subject_id, year 
+	from studies group by subject_id, year order by count(1) desc limit 1) as x 
+where s.id = x.subject_id ;
+
+#EN TOTAL
+select s.name 
+from subjects as s, 
+(select count(1), subject_id 
+	from studies 
+	group by subject_id 
+	order by count(1) desc limit 1) as x 
+where s.id = x.subject_id ;
+
+Quien es el alumno matriculado en mas asignaturas?
+
+select p.name 
+from people as p, 
+(select count(1), student_id 
+	from studies as s 
+	group by student_id 
+	order by count(1) desc limit 1) as x 
+where p.id = x.student_id;  
+;
+
+Quien es el alumno matriculado en mas creditos?
+
+select p.name,s.student_id, sum(sb.credits) from studies as s 
+inner join subjects as sb on sb.id = s.subject_id 
+inner join people as p on p.id = s.student_id group by p.name, s.student_id
+order by sum(sb.credits) desc limit 1;
+
+Cual es la nacionalidad mas repetida entre los profesores?
+
+select count(1), nationality 
+from people as p 
+where p.id in (select distinct(teacher_id) from teaches) 
+group by nationality 
+order by count(1) desc limit 1;
+
+Cual es la edad media de los alumnos de "Data mining"?
+
+select avg(age)
+from people
+inner join studies on id=student_id
+inner join subjects as s on subject_id = s.id
+where s.name = 'Data mining';
+
+
+Cual es la nota media en "Algebra"?
+
+select avg(mark)
+from studies
+inner join subjects on id = subject_id
+where name = 'Algebra';
+
+Cual es la nota media en las asignaturas de "cs" (Computer science)?
+
+select name, avg(mark)
+from subjects
+inner join studies on subject_id = id
+where field = 'cs'
+group by name
+order by name;
+
+Cual es la nota media en las asignaturas de "mat" (Mathematics) entre los aprobados?
+
+select name, avg(mark)        
+from subjects
+inner join studies on subject_id = id
+where field = 'mat' and mark >= 5
+group by name
+order by name;
+
+Quien es el/la alumno/a con mejor nota media?
+
+select name, avg(mark)
+from studies 
+inner join people on id = student_id
+group by name
+order by avg(mark) 
+desc limit 1;
+
+Sabiendo que un credito vale 30 EUR, cuanto ha ganado la academia cada anyo?
+
+select year, sum(credits)*30 from subjects
+inner join studies on id=subject_id 
+group by year;
+
+Que profesores monopolizan asignaturas? (unicos profesores de la asignatura)
+
+select name from (select subject_id,teacher_id from teaches t group by subject_id, teacher_id order by subject_id, teacher_id) as A, people where id=a.subject_id group by a.subject_id, name  having count(1) = 1;
+
+Si los profesores ganan un 30% de los creditos que imparten, cuanto hay que pagar a cada uno?
+(suponiendo cada credito 30EUR)
+
+select p.name, sum(credits)*30*30/100 as amount, t.year 
+from people as p
+inner join teaches as t on p.id=t.teacher_id
+inner join subjects as s on t.subject_id = s.id
+inner join studies as st on st.subject_id = s.id
+group by p.name, t.year
+order by p.name, t.year
+;
+
